@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Service - Sree Sai Ram Motors</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">Sree Sai Ram Motors</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="e-kart.html">E-Kart</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Book a Service Appointment</h2>
+            <div
+                style="max-width: 600px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vehicle Model</label>
+                        <input type="text" id="vehicle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Service Type</label>
+                        <select id="serviceType" required>
+                            <option value="Battery Replacement">Battery Replacement</option>
+                            <option value="Oil Change">Oil Change</option>
+                            <option value="Engine Repair">Engine Repair</option>
+                            <option value="Tyre Service">Tyre Service</option>
+                            <option value="Brake Service">Brake Service</option>
+                            <option value="General Service">General Service</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Date</label>
+                        <input type="date" id="bookingDate" required min="">
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Time</label>
+                        <input type="time" id="bookingTime" required>
+                    </div>
+                    <button type="submit" class="add-to-cart">Book Appointment</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('bookingDate').min = new Date().toISOString().split('T')[0];
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                customerName: document.getElementById('customerName').value,
+                phone: document.getElementById('phone').value,
+                vehicle: document.getElementById('vehicle').value,
+                serviceType: document.getElementById('serviceType').value,
+                date: document.getElementById('bookingDate').value,
+                time: document.getElementById('bookingTime').value
+            };
+
+            try {
+                // Adjust to the actual endpoint
+                const res = await fetch('http://localhost:5000/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Booking Confirmed!');
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.error || 'Failed to book');
+                }
+            } catch (e) {
+                alert('An error occurred. Make sure the backend is running.');
+            }
+        });
+    </script>
+</body>
+
+</html>

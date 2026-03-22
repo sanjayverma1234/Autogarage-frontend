@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">Sree Sai Ram Motors</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a id="logoutBtn" href="#">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">My Dashboard</h2>
+            <div style="display: grid; gap: 2rem;">
+                <div
+                    style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <h3>My Orders</h3>
+                    <p>Coming Soon...</p>
+                </div>
+                <div
+                    style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <h3>My Bookings</h3>
+                    <p>Coming Soon...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+
+</html>

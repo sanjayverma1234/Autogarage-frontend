@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Manage Products - Admin</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="container" style="padding-top:100px;">
+        <h1>Manage Products</h1>
+        <a href="dashboard.html">Back to Dashboard</a>
+
+        <!-- Add Product Form -->
+        <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin: 2rem 0;">
+            <h2>Add New Product</h2>
+            <form id="productForm" enctype="multipart/form-data">
+                <input type="text" name="name" placeholder="Product Name"
+                    style="width:100%; padding: 10px; margin:10px 0;" required>
+                <textarea name="description" placeholder="Description" style="width:100%; padding: 10px; margin:10px 0;"
+                    required></textarea>
+                <input type="number" name="price" placeholder="Price" style="width:100%; padding: 10px; margin:10px 0;"
+                    required>
+                <input type="number" name="stock" placeholder="Stock" style="width:100%; padding: 10px; margin:10px 0;"
+                    required>
+                <input type="file" name="image" accept="image/*" style="margin:10px 0;" required>
+                <br>
+                <button type="submit" class="btn-primary" style="border:none; cursor:pointer;">Add Product</button>
+            </form>
+        </div>
+
+        <!-- Products List -->
+        <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h2>Products</h2>
+            <div id="productsList" class="products-grid"></div>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let tokenLocal = localStorage.getItem('token');
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_BASE}/products`);
+                if (!res.ok) throw new Error();
+                const products = await res.json();
+                const grid = document.getElementById('productsList');
+                grid.innerHTML = products.map(p => `
+                    <div class="product-card">
+                        <img src="${p.image}" class="product-img">
+                        <div class="product-info">
+                            <h3>${p.name}</h3>
+                            <p>₹${p.price} | Stock: ${p.stock}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                document.getElementById('productsList').innerHTML = '<p>Could not load products from API.</p>';
+            }
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            try {
+                await fetch(`${API_BASE}/products`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${tokenLocal}` },
+                    body: formData
+                });
+                alert('Success');
+                loadProducts();
+                e.target.reset();
+            } catch (e) {
+                alert('Add failed');
+            }
+        });
+
+        loadProducts();
+    </script>
+</body>
+
+</html>

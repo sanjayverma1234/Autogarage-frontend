@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cart - SSR Motors</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">SSR Motors</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <h2>Your Cart</h2>
+            <div id="cartItems" style="margin-top:20px;"></div>
+            <h3 style="margin-top: 1rem;">Total: ₹<span id="cartTotal">0</span></h3>
+            <button class="add-to-cart" style="max-width:300px; margin-top:20px;" onclick="checkout()">Checkout</button>
+        </div>
+    </section>
+
+    <script src="js/cart.js"></script>
+    <script>
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const totalEl = document.getElementById('cartTotal');
+            let total = 0;
+            container.innerHTML = '';
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p>Your cart is empty.</p>';
+                totalEl.textContent = '0';
+                return;
+            }
+
+            cart.forEach(item => {
+                total += item.price * item.quantity;
+                container.innerHTML += `<div style="border-bottom:1px solid #ddd; padding:15px 0; display:flex; justify-content:space-between;">
+                    <span><b>${item.name}</b> x ${item.quantity}</span>
+                    <span>₹${item.price * item.quantity}</span>
+                </div>`;
+            });
+            totalEl.textContent = total;
+        }
+
+        function checkout() {
+            if (cart.length === 0) return alert('Cart is empty!');
+            alert('Checkout logic and Razorpay integration goes here');
+            // Logic would redirect or trigger Razorpay API
+        }
+
+        renderCart();
+    </script>
+</body>
+
+</html>

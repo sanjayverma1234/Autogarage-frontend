@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Kart - Sree Sai Ram Motors</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-car"></i> Sree Sai Ram Motors
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="e-kart.html">E-Kart</a></li>
+                <li><a href="book-service.html">Book Service</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="login.html" id="loginBtn">Login</a></li>
+                <li class="cart-icon">
+                    <a href="cart.html"><i class="fas fa-shopping-cart"></i><span id="cartCount">0</span></a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Vehicle Spare Parts Store</h2>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be loaded by JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const grid = document.getElementById('productsGrid');
+            try {
+                // Try API first
+                const products = await api.getProducts();
+                if (products && products.length > 0) {
+                    renderProducts(products);
+                } else {
+                    throw new Error('Empty database');
+                }
+            } catch (error) {
+                // Fallback to static JSON
+                console.log('Falling back to local products.json');
+                fetch('data/products.json')
+                    .then(response => response.json())
+                    .then(products => renderProducts(products));
+            }
+
+            function renderProducts(products) {
+                grid.innerHTML = '';
+                products.forEach(product => {
+                    const productCard = `
+                        <div class="product-card">
+                            <img src="${product.image || 'https://images.unsplash.com/photo-1607936854279-55e8a4a48582?w=400'}" alt="${product.name}" class="product-img">
+                            <div class="product-info">
+                                <h3>${product.name}</h3>
+                                <p>${product.description}</p>
+                                <div class="product-price">₹${product.price}</div>
+                                <button class="add-to-cart" onclick="addToCart('${product.id || product._id}', '${product.name}', ${product.price})">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    grid.innerHTML += productCard;
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

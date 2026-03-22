@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Sree Sai Ram Motors</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="container" style="padding-top: 100px;">
+        <h1>Admin Dashboard</h1>
+
+        <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h2>Manage Products</h2>
+            <a href="products.html" class="btn-primary" style="margin-left:0; margin-top:20px;">Manage Products</a>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h2>Orders</h2>
+            <p>Total Orders: <span id="totalOrders">0</span></p>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin-bottom: 2rem;">
+            <h2>Quick Actions</h2>
+            <button class="btn-secondary" style="border-color:#e74c3c; color:#e74c3c;"
+                onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <script src="../js/admin.js"></script>
+</body>
+
+</html>

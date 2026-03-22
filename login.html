@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login / Admin - SSR Motors</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">SSR Motors</div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <div
+                style="max-width: 400px; margin: 0 auto; background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <h2 style="margin-bottom: 1.5rem; text-align: center;" id="formTitle">Login</h2>
+                <form id="authForm">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group register-only" style="display:none;">
+                        <label>Full Name</label>
+                        <input type="text" id="name">
+                    </div>
+                    <div class="form-group register-only" style="display:none;">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="add-to-cart" id="authBtn"
+                        style="border:none; cursor:pointer;">Login</button>
+                    <p style="text-align:center; margin-top:1rem; cursor:pointer; color:#3498db;" id="toggleForm">Don't
+                        have an account? Register here.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/api.js"></script>
+    <script>
+        let isLogin = true;
+
+        document.getElementById('toggleForm').addEventListener('click', () => {
+            isLogin = !isLogin;
+            document.getElementById('formTitle').innerText = isLogin ? 'Login' : 'Register';
+            document.getElementById('authBtn').innerText = isLogin ? 'Login' : 'Register';
+            document.getElementById('toggleForm').innerText = isLogin ? "Don't have an account? Register here." : "Already have an account? Login here.";
+
+            const reqFields = document.querySelectorAll('.register-only');
+            reqFields.forEach(el => {
+                el.style.display = isLogin ? 'none' : 'block';
+                el.querySelector('input').required = !isLogin;
+            });
+        });
+
+        document.getElementById('authForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const credentials = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            if (!isLogin) {
+                credentials.name = document.getElementById('name').value;
+                credentials.phone = document.getElementById('phone').value;
+            }
+            try {
+                const data = isLogin ? await api.login(credentials) : await api.register(credentials);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.role);
+                alert(isLogin ? 'Logged in successfully!' : 'Registered and logged in successfully!');
+
+                if (data.role === 'admin') {
+                    window.location.href = 'admin/dashboard.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (error) {
+                alert((isLogin ? 'Login' : 'Registration') + ' failed: ' + error.message);
+            }
+        });
+    </script>
+</body>
+
+</html>
