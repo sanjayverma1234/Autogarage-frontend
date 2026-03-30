@@ -4,6 +4,10 @@
 <head>
     <title>Manage Products - Admin</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .preview-img { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; }
+    </style>
 </head>
 
 <body>
@@ -14,18 +18,29 @@
         <!-- Add Product Form -->
         <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px; margin: 2rem 0;">
             <h2>Add New Product</h2>
-            <form id="productForm" enctype="multipart/form-data">
-                <input type="text" name="name" placeholder="Product Name"
+            <form id="productForm">
+                <input type="text" name="name" id="p_name" placeholder="Product Name"
                     style="width:100%; padding: 10px; margin:10px 0;" required>
-                <textarea name="description" placeholder="Description" style="width:100%; padding: 10px; margin:10px 0;"
+                <textarea name="description" id="p_desc" placeholder="Description" style="width:100%; padding: 10px; margin:10px 0;"
                     required></textarea>
-                <input type="number" name="price" placeholder="Price" style="width:100%; padding: 10px; margin:10px 0;"
+                <select name="category" id="p_category" style="width:100%; padding: 10px; margin:10px 0;" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="engine">Engine</option>
+                    <option value="electrical">Electrical</option>
+                    <option value="tyres">Tyres</option>
+                    <option value="accessories">Accessories</option>
+                </select>
+                <input type="number" name="price" id="p_price" placeholder="Price" style="width:100%; padding: 10px; margin:10px 0;"
                     required>
-                <input type="number" name="stock" placeholder="Stock" style="width:100%; padding: 10px; margin:10px 0;"
+                <input type="number" name="stock" id="p_stock" placeholder="Stock" style="width:100%; padding: 10px; margin:10px 0;"
                     required>
-                <input type="file" name="image" accept="image/*" style="margin:10px 0;" required>
+                
+                <label style="display:block; margin-top:10px; font-weight:bold;">Product Images (Multiple allowed)</label>
+                <input type="file" id="imageInput" multiple accept="image/*" style="margin:10px 0;" required>
+                
+                <div id="previewGallery" class="preview-grid"></div>
                 <br>
-                <button type="submit" class="btn-primary" style="border:none; cursor:pointer;">Add Product</button>
+                <button type="submit" id="submitBtn" class="btn-primary" style="border:none; cursor:pointer;">Add Product</button>
             </form>
         </div>
 
@@ -45,37 +60,124 @@
             try {
                 const res = await fetch(`${API_BASE}/products`);
                 if (!res.ok) throw new Error();
-                const products = await res.json();
+                const data = await res.json();
+                const products = data.products || data; // handle pagination response or array
+                
                 const grid = document.getElementById('productsList');
-                grid.innerHTML = products.map(p => `
+                grid.innerHTML = products.map(p => {
+                    const imgUrl = (p.images && p.images.length > 0) ? p.images[0] : (p.image || '');
+                    return `
                     <div class="product-card">
-                        <img src="${p.image}" class="product-img">
+                        <img src="${imgUrl}" class="product-img" alt="${p.name}">
                         <div class="product-info">
                             <h3>${p.name}</h3>
+                            <p>Category: ${p.category || 'N/A'}</p>
                             <p>₹${p.price} | Stock: ${p.stock}</p>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } catch (e) {
+                console.error(e);
                 document.getElementById('productsList').innerHTML = '<p>Could not load products from API.</p>';
             }
         }
 
-        document.getElementById('productForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
+        // Handle Image Previews
+        const imageInput = document.getElementById('imageInput');
+        const previewGallery = document.getElementById('previewGallery');
+        let selectedFiles = [];
 
+        imageInput.addEventListener('change', (e) => {
+            selectedFiles = Array.from(e.target.files);
+            previewGallery.innerHTML = '';
+            
+            selectedFiles.forEach(file => {
+                const objectUrl = URL.createObjectURL(file);
+                const img = document.createElement('img');
+                img.src = objectUrl;
+                img.className = 'preview-img';
+                previewGallery.appendChild(img);
+            });
+        });
+
+        // Handle Form Submit
+        const productForm = document.getElementById('productForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (selectedFiles.length === 0) return alert('Please select images first.');
+            
             try {
-                await fetch(`${API_BASE}/products`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${tokenLocal}` },
-                    body: formData
+                submitBtn.textContent = 'Uploading Images to Cloudinary...';
+                submitBtn.disabled = true;
+
+                // 1. Get the signature from backend
+                const sigResponse = await fetch(`${API_BASE}/upload/signature`, {
+                    headers: { 'Authorization': `Bearer ${tokenLocal}` }
                 });
-                alert('Success');
+                if(!sigResponse.ok) throw new Error('Failed to get signature. Check backend setup and Cloudinary credentials.');
+                const { signature, timestamp, cloud_name, api_key } = await sigResponse.json();
+
+                // 2. Upload images directly
+                const uploadedImageUrls = [];
+                const uploadPromises = selectedFiles.map(async (file) => {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('api_key', api_key);
+                    formData.append('timestamp', timestamp);
+                    formData.append('signature', signature);
+                    formData.append('folder', 'autogarage_products');
+
+                    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const cloudData = await cloudRes.json();
+                    if(cloudData.error) throw new Error(cloudData.error.message);
+                    uploadedImageUrls.push(cloudData.secure_url);
+                });
+
+                await Promise.all(uploadPromises);
+
+                // 3. Save to database
+                submitBtn.textContent = 'Saving to Database...';
+                
+                const productData = {
+                    name: document.getElementById('p_name').value,
+                    description: document.getElementById('p_desc').value,
+                    category: document.getElementById('p_category').value,
+                    price: Number(document.getElementById('p_price').value),
+                    stock: Number(document.getElementById('p_stock').value),
+                    images: uploadedImageUrls // <--- Multiple images array!
+                };
+
+                const dbResponse = await fetch(`${API_BASE}/products`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${tokenLocal}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                if(!dbResponse.ok) {
+                    const err = await dbResponse.json();
+                    throw new Error(err.error || 'Failed to save product');
+                }
+
+                alert('Product created successfully!');
+                productForm.reset();
+                previewGallery.innerHTML = '';
+                selectedFiles = [];
                 loadProducts();
-                e.target.reset();
-            } catch (e) {
-                alert('Add failed');
+
+            } catch (err) {
+                console.error(err);
+                alert(`Error: ${err.message}`);
+            } finally {
+                submitBtn.textContent = 'Add Product';
+                submitBtn.disabled = false;
             }
         });
 
